@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Live Transcription</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-size: 3rem;
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    #text {
+      line-height: 1.4;
+    }
+    button {
+      font-size: 1.5rem;
+      padding: 1rem 2rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <button id="start">Start Listening</button>
+  <button id="stop">Stop</button>
+  <div id="text"></div>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognizer = new SpeechRecognition();
+    recognizer.continuous = true;
+    recognizer.interimResults = true;
+    recognizer.lang = "en-US";
+
+    const output = document.getElementById("text");
+
+  recognizer.onresult = e => {
+    let interim = "";
+    let final = "";
+
+    for (let i = 0; i < e.results.length; i++) {
+      const result = e.results[i];
+
+      if (result.isFinal) {
+        let text = result[0].transcript.trim();
+
+        // Basic auto punctuation (you can expand these rules anytime)
+// Period
+text = text.replace(/\b(period|full stop|dot)\b/gi, ".");
+
+// Comma
+text = text.replace(/\b(comma|pause-comma)\b/gi, ",");
+
+// Question mark
+text = text.replace(/\b(question mark|q-mark)\b/gi, "?");
+
+// Exclamation mark
+text = text.replace(/\b(exclamation mark|bang)\b/gi, "!");
+
+// Quotes
+text = text.replace(/\b(open quote|quote start)\b/gi, "“");
+text = text.replace(/\b(close quote|quote end)\b/gi, "”");
+
+// Dash
+text = text.replace(/\b(dash|hyphen)\b/gi, "-");
+text = text.replace(/\b(long dash)\b/gi, "—");
+
+        final += text + " ";
+      } else {
+        interim += result[0].transcript;
+      }
+    }
+
+    output.textContent = final + interim;
+  };
+
+
+    document.getElementById("start").onclick = () => recognizer.start();
+    document.getElementById("stop").onclick = () => recognizer.stop();
+  </script>
+</body>
+</html>
