@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phrase Diff – Uni Compare Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #050816;
+      --card-bg: #080f24;
+      --card-border: rgba(255, 255, 255, 0.06);
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.12);
+      --accent-strong: rgba(129, 140, 248, 0.25);
+      --danger: #f97373;
+      --danger-soft: rgba(248, 113, 113, 0.15);
+      --success: #4ade80;
+      --success-soft: rgba(74, 222, 128, 0.16);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --outline: rgba(148, 163, 184, 0.4);
+      --radius-xl: 18px;
+      --radius-full: 999px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.7);
+      --transition-fast: 160ms ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 40%, #020617 100%);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 12px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(94, 234, 212, 0.08), transparent 55%),
+                  radial-gradient(circle at top right, rgba(129, 140, 248, 0.18), transparent 60%),
+                  var(--card-bg);
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      padding: 24px;
+      backdrop-filter: blur(26px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 28px 32px 30px;
+      }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(32px);
+      opacity: 0.5;
+      z-index: 0;
+    }
+
+    .orb--purple {
+      width: 210px;
+      height: 210px;
+      background: radial-gradient(circle, rgba(129, 140, 248, 0.7), transparent 70%);
+      top: -70px;
+      right: -70px;
+    }
+
+    .orb--cyan {
+      width: 170px;
+      height: 170px;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.4), transparent 75%);
+      bottom: -60px;
+      left: -40px;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .title-block {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .logo-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 20% 0%, #22c1c3 0%, #4f46e5 20%, #7c3aed 55%, #0f172a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-badge span {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e5e7eb;
+      letter-spacing: -0.04em;
+      transform: translateY(1px);
+    }
+
+    .title-text-main {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .title-highlight {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.16);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #e5e7eb;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.7);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #4ade80;
+      box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.28);
+    }
+
+    .chip-pill {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: rgba(129, 140, 248, 0.5);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr);
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.95);
+      padding: 14px 14px 16px;
+      position: relative;
+    }
+
+    @media (min-width: 768px) {
+      .panel {
+        padding: 16px 16px 18px;
+      }
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.9);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--outline);
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-main);
+      font-size: 13px;
+      padding: 11px 12px 11px;
+      resize: vertical;
+      min-height: 80px;
+      max-height: 240px;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+      line-height: 1.4;
+    }
+
+    textarea::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      background: rgba(15, 23, 42, 0.98);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.9), 0 18px 40px rgba(15, 23, 42, 0.9);
+      transform: translateY(-1px);
+    }
+
+    label.floating-label {
+      position: absolute;
+      left: 12px;
+      top: 9px;
+      font-size: 11px;
+      color: rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 0 6px;
+      border-radius: 10px;
+      transform: translateY(-14px);
+      pointer-events: none;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .hint-code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      color: #e5e7eb;
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    button#compareBtn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      border-radius: var(--radius-full);
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+      color: #f9fafb;
+      box-shadow: 0 14px 35px rgba(79, 70, 229, 0.6);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter 140ms ease-out;
+    }
+
+    button#compareBtn span.icon {
+      font-size: 15px;
+      transform: translateY(-1px);
+    }
+
+    button#compareBtn:hover {
+      transform: translateY(-1.5px) scale(1.01);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 45px rgba(79, 70, 229, 0.85);
+    }
+
+    button#compareBtn:active {
+      transform: translateY(0) scale(0.99);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.7);
+    }
+
+    .quick-btn {
+      border-radius: var(--radius-full);
+      padding: 5px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .quick-btn:hover {
+      border-color: rgba(129, 140, 248, 0.8);
+      background: rgba(15, 23, 42, 1);
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .quick-btn span.icon {
+      font-size: 12px;
+    }
+
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 2px 0 6px;
+    }
+
+    .stat-pill {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+    }
+
+    .stat-pill--match {
+      border-color: rgba(74, 222, 128, 0.9);
+      background: var(--success-soft);
+    }
+
+    .stat-pill--add {
+      border-color: rgba(129, 140, 248, 0.9);
+      background: var(--accent-soft);
+    }
+
+    .stat-pill--remove {
+      border-color: rgba(248, 113, 113, 0.9);
+      background: var(--danger-soft);
+    }
+
+    .stat-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+    }
+
+    .stat-dot--match {
+      background: var(--success);
+    }
+
+    .stat-dot--add {
+      background: var(--accent);
+    }
+
+    .stat-dot--remove {
+      background: var(--danger);
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 7px;
+      border-radius: 999px;
+    }
+
+    .legend-swatch--match {
+      background: var(--success-soft);
+      border: 1px solid var(--success);
+    }
+
+    .legend-swatch--add {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+    }
+
+    .legend-swatch--remove {
+      background: var(--danger-soft);
+      border: 1px solid var(--danger);
+    }
+
+    .diff-block {
+      border-radius: 16px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 10px 10px 10px;
+      max-height: 260px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 768px) {
+      .diff-block {
+        padding: 11px 12px;
+      }
+    }
+
+    .diff-line-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .diff-line {
+      margin-bottom: 6px;
+      word-wrap: break-word;
+    }
+
+    .diff-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .token {
+      display: inline-block;
+      padding: 1px 3px;
+      border-radius: 6px;
+      margin: 0 1px 2px 0;
+      transition: background 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, transform 100ms ease-out;
+    }
+
+    .token-match {
+      background: var(--success-soft);
+      color: #ecfdf3;
+    }
+
+    .token-add {
+      background: var(--accent-soft);
+      color: #e0e7ff;
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
+    }
+
+    .token-remove {
+      background: var(--danger-soft);
+      color: #fee2e2;
+      text-decoration: line-through;
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.7);
+    }
+
+    .empty-state {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 10px 2px 4px;
+    }
+
+    .empty-state span {
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    .footer-note {
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .footer-note a {
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    .footer-note a:hover {
+      text-decoration: underline;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(55, 65, 81, 0.8);
+      border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="card">
+      <div class="orb orb--purple"></div>
+      <div class="orb orb--cyan"></div>
+
+      <div class="card-inner">
+        <div class="header-row">
+          <div class="title-block">
+            <div class="logo-badge">
+              <span>≋</span>
+            </div>
+            <div>
+              <div class="title-text-main">
+                Phrase Diff
+                <span class="title-highlight">Study helper</span>
+              </div>
+              <div class="subtitle">Paste a reference phrase and your version – see what changed in one glance.</div>
+            </div>
+          </div>
+
+          <div class="chip-row">
+            <div class="chip">
+              <div class="chip-dot"></div>
+              Live comparison
+            </div>
+            <div class="chip chip-pill">
+              🎓 For uni students
+            </div>
+          </div>
+        </div>
+
+        <div class="main-layout">
+          <!-- INPUTS -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                INPUT
+              </div>
+              <div class="panel-pill">
+                <span class="panel-pill-dot"></span>
+                <span>Word-level comparison</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="input-wrapper">
+                <textarea id="refText" placeholder="Original phrase from slides, book, or article…"></textarea>
+                <label class="floating-label" for="refText">Reference phrase</label>
+              </div>
+
+              <div class="input-wrapper">
+                <textarea id="sampleText" placeholder="Your own version, summary, or paraphrase…"></textarea>
+                <label class="floating-label" for="sampleText">Your version</label>
+              </div>
+
+              <div class="hint">
+                <span>Tip:</span>
+                <span class="hint-code">Matches = green</span>
+                <span class="hint-code">Added words = blue</span>
+                <span class="hint-code">Missing words = red</span>
+              </div>
+
+              <div class="footer-actions">
+                <button id="compareBtn" type="button">
+                  <span class="icon">⚡</span>
+                  <span>Compare phrases</span>
+                </button>
+
+                <button id="swapBtn" type="button" class="quick-btn">
+                  <span class="icon">⇅</span>
+                  Swap texts
+                </button>
+
+                <button id="demoBtn" type="button" class="quick-btn">
+                  <span class="icon">★</span>
+                  Load demo
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- RESULTS -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                RESULTS
+              </div>
+              <div class="panel-pill">
+                <span class="panel-pill-dot"></span>
+                <span id="statusPill">Waiting for input</span>
+              </div>
+            </div>
+
+            <div class="results-panel">
+              <div class="stats-row" id="statsRow" hidden>
+                <div class="stat-pill stat-pill--match">
+                  <span class="stat-dot stat-dot--match"></span>
+                  <span id="matchCount">0</span> matching words
+                </div>
+                <div class="stat-pill stat-pill--add">
+                  <span class="stat-dot stat-dot--add"></span>
+                  <span id="addCount">0</span> added in your version
+                </div>
+                <div class="stat-pill stat-pill--remove">
+                  <span class="stat-dot stat-dot--remove"></span>
+                  <span id="removeCount">0</span> missing vs. reference
+                </div>
+              </div>
+
+              <div class="legend-row">
+                <div class="legend-item">
+                  <span class="legend-swatch legend-swatch--match"></span>
+                  Same word
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-swatch--add"></span>
+                  Only in your version
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-swatch--remove"></span>
+                  Only in reference
+                </div>
+              </div>
+
+              <div class="diff-block" id="diffBlock">
+                <div class="empty-state" id="emptyState">
+                  Paste a <span>reference</span> and <span>your version</span>, then hit “Compare phrases”.
+                </div>
+              </div>
+
+              <div class="footer-note">
+                <span>Works best for short phrases & exam-style sentences.</span>
+                <span>Made for quick self-checking between study sessions.</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const refTextEl = document.getElementById("refText");
+    const sampleTextEl = document.getElementById("sampleText");
+    const compareBtn = document.getElementById("compareBtn");
+    const swapBtn = document.getElementById("swapBtn");
+    const demoBtn = document.getElementById("demoBtn");
+    const diffBlock = document.getElementById("diffBlock");
+    const emptyState = document.getElementById("emptyState");
+    const statsRow = document.getElementById("statsRow");
+    const matchCountEl = document.getElementById("matchCount");
+    const addCountEl = document.getElementById("addCount");
+    const removeCountEl = document.getElementById("removeCount");
+    const statusPill = document.getElementById("statusPill");
+
+    function getWords(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return [];
+      return trimmed.split(/\s+/);
+    }
+
+    function computeDiff(a, b) {
+      const m = a.length;
+      const n = b.length;
+      const dp = new Array(m + 1);
+
+      for (let i = 0; i <= m; i++) {
+        dp[i] = new Array(n + 1).fill(0);
+      }
+
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          if (a[i - 1] === b[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+
+      const result = [];
+      let i = m;
+      let j = n;
+
+      while (i > 0 && j > 0) {
+        if (a[i - 1] === b[j - 1]) {
+          result.push({ type: "match", word: a[i - 1] });
+          i--;
+          j--;
+        } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+          result.push({ type: "remove", word: a[i - 1] });
+          i--;
+        } else {
+          result.push({ type: "add", word: b[j - 1] });
+          j--;
+        }
+      }
+
+      while (i > 0) {
+        result.push({ type: "remove", word: a[i - 1] });
+        i--;
+      }
+
+      while (j > 0) {
+        result.push({ type: "add", word: b[j - 1] });
+        j--;
+      }
+
+      return result.reverse();
+    }
+
+    function renderLine(ops, lineType) {
+      const container = document.createElement("div");
+      container.className = "diff-line";
+
+      ops.forEach((op) => {
+        if (lineType === "ref" && op.type === "add") return;
+        if (lineType === "sample" && op.type === "remove") return;
+
+        const span = document.createElement("span");
+        span.textContent = op.word;
+        span.classList.add("token");
+
+        if (op.type === "match") span.classList.add("token-match");
+        if (op.type === "add") span.classList.add("token-add");
+        if (op.type === "remove") span.classList.add("token-remove");
+
+        container.appendChild(span);
+        container.appendChild(document.createTextNode(" "));
+      });
+
+      return container;
+    }
+
+    function updateStats(ops) {
+      let match = 0;
+      let add = 0;
+      let remove = 0;
+
+      ops.forEach((op) => {
+        if (op.type === "match") match++;
+        if (op.type === "add") add++;
+        if (op.type === "remove") remove++;
+      });
+
+      matchCountEl.textContent = match;
+      addCountEl.textContent = add;
+      removeCountEl.textContent = remove;
+
+      statsRow.hidden = ops.length === 0;
+    }
+
+    function compare() {
+      const refText = refTextEl.value;
+      const sampleText = sampleTextEl.value;
+
+      const refWords = getWords(refText);
+      const sampleWords = getWords(sampleText);
+
+      diffBlock.innerHTML = "";
+      emptyState && emptyState.remove();
+
+      if (!refWords.length && !sampleWords.length) {
+        const msg = document.createElement("div");
+        msg.className = "empty-state";
+        msg.textContent = "Add some text above to get started.";
+        diffBlock.appendChild(msg);
+        statsRow.hidden = true;
+        statusPill.textContent = "Waiting for input";
+        return;
+      }
+
+      const ops = computeDiff(refWords, sampleWords);
+      updateStats(ops);
+
+      const refLabel = document.createElement("div");
+      refLabel.className = "diff-line-label";
+      refLabel.textContent = "Reference";
+      diffBlock.appendChild(refLabel);
+      diffBlock.appendChild(renderLine(ops, "ref"));
+
+      const sampleLabel = document.createElement("div");
+      sampleLabel.className = "diff-line-label";
+      sampleLabel.textContent = "Your version";
+      diffBlock.appendChild(sampleLabel);
+      diffBlock.appendChild(renderLine(ops, "sample"));
+
+      statusPill.textContent = "Comparison updated";
+    }
+
+    compareBtn.addEventListener("click", compare);
+
+    [refTextEl, sampleTextEl].forEach((el) => {
+      el.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "enter") {
+          e.preventDefault();
+          compare();
+        }
+      });
+    });
+
+    swapBtn.addEventListener("click", () => {
+      const tmp = refTextEl.value;
+      refTextEl.value = sampleTextEl.value;
+      sampleTextEl.value = tmp;
+      statusPill.textContent = "Texts swapped";
+    });
+
+    demoBtn.addEventListener("click", () => {
+      refTextEl.value = "Photosynthesis is the process by which green plants convert light energy into chemical energy.";
+      sampleTextEl.value = "Photosynthesis is the process where plants turn light energy into stored chemical energy.";
+      compare();
+    });
+
+    window.addEventListener("load", () => {
+      statusPill.textContent = "Ready to compare";
+    });
+  </script>
+</body>
+</html>
